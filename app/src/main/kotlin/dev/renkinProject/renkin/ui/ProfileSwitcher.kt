@@ -452,6 +452,15 @@ private fun ProfileDetailsDialog(
     var name by rememberSaveable { mutableStateOf(initialName) }
     var description by rememberSaveable { mutableStateOf(initialDescription) }
     var packLabel by rememberSaveable { mutableStateOf(initialPackLabel) }
+    var packIconPath by rememberSaveable { mutableStateOf("") }
+
+val iconPicker = rememberLauncherForActivityResult(
+    ActivityResultContracts.OpenDocument()
+) { uri ->
+    if (uri != null) {
+        packIconPath = uri.toString()
+    }
+}
 
     RenkinAlertDialog(
         onDismissRequest = onDismiss,
