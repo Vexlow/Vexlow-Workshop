@@ -57,6 +57,7 @@ import kotlinx.coroutines.launch
 private const val MAX_PROFILE_NAME = 24
 private const val MAX_PROFILE_DESCRIPTION = 60
 private const val MAX_PACK_LABEL = 30
+private const val PACK_ICON_MIME_TYPE = "image/*"
 
 /**
  * The top-bar title as a profile switcher: shows the active profile's name (the default profile
