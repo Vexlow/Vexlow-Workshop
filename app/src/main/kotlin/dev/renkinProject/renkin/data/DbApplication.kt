@@ -31,6 +31,8 @@ data class Profile(
     @ColumnInfo(defaultValue = "") val description: String = "",
     // Launcher-visible label of this profile's built pack (e.g. "Renkin Dark").
     @ColumnInfo(defaultValue = "") val packLabel: String = "",
+    // Custom launcher icon for this profile's generated APK
+    @ColumnInfo(defaultValue = "") val packIconPath: String = "",
     // JSON snapshot of the generation preferences, captured when switching away.
     @ColumnInfo(defaultValue = "") val prefsSnapshot: String = "",
     // True when the profile's icons were saved (e.g. before switching away) but not built
@@ -310,7 +312,7 @@ interface ProfileDao {
         BuiltIcon::class,
         ModifierPreset::class
     ],
-    version = 18
+    version = 19
 )
 abstract class RenkinPackDatabase : RoomDatabase() {
     abstract fun renkinPackDao(): RenkinPackDao
@@ -539,7 +541,13 @@ abstract class RenkinPackDatabase : RoomDatabase() {
                 )
             }
         }
-
+internal val MIGRATION_18_19 = object : Migration(18, 19) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            "ALTER TABLE Profile ADD COLUMN packIconPath TEXT NOT NULL DEFAULT ''"
+        )
+    }
+}
         internal val ALL_MIGRATIONS = arrayOf(
             MIGRATION_1_2,
             MIGRATION_2_3,
@@ -557,7 +565,8 @@ abstract class RenkinPackDatabase : RoomDatabase() {
             MIGRATION_14_15,
             MIGRATION_15_16,
             MIGRATION_16_17,
-            MIGRATION_17_18
+            MIGRATION_17_18,
+            MIGRATION_18_19
         )
 
         private fun insertDefaultProfile(db: SupportSQLiteDatabase) {
