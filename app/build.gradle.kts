@@ -22,7 +22,7 @@ android {
     defaultConfig {
         // Renamed from the fork's com.kaanelloed.iconeration (2026-07): a brand-new app
         // identity — existing installs of the old id do not update into this one.
-        applicationId = "dev.renkinProject.renkin"
+        applicationId = "com.vexlow.vipd"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         // Renkin's own year.month.patch scheme, started for the first release under the new
