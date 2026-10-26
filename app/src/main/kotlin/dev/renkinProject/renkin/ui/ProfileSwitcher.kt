@@ -467,6 +467,14 @@ val iconPicker = rememberLauncherForActivityResult(
         title = { Text(title) },
         text = {
             Column {
+                TextButton(
+    onClick = { iconPicker.launch(arrayOf(PACK_ICON_MIME_TYPE)) }
+) {
+    Text(
+        if (packIconPath.isEmpty()) "Choose Pack Icon"
+        else "Change Pack Icon"
+    )
+                }
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it.take(MAX_PROFILE_NAME) },
