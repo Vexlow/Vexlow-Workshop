@@ -71,6 +71,7 @@ class IconPackBuilder(
     // package regardless — Android doesn't require an app's id to match its class packages.
     private val packPackageName: String = PACKAGE_NAME,
     private val packLabel: String = "Renkin Pack",
+    private val packIconPath: String = "",
     private val iconPackCatalog: IconPackCatalog = IconPackCatalog(ctx)
 ) {
     private val apkDir = ctx.cacheDir.resolve("apk")
@@ -698,6 +699,7 @@ class IconPackBuilder(
     }
 
     private fun insertIconPackAppIcons(apkModule: ApkModule, packageBlock: PackageBlock, manifest: AndroidManifestBlock) {
+    
         createBitmapResource(apkModule, packageBlock, R.drawable.mdpi_ic_launcher, "ic_launcher", "mdpi", "mipmap")
         createBitmapResource(apkModule, packageBlock, R.drawable.hdpi_ic_launcher, "ic_launcher", "hdpi", "mipmap")
         createBitmapResource(apkModule, packageBlock, R.drawable.xhdpi_ic_launcher, "ic_launcher", "xhdpi", "mipmap")
