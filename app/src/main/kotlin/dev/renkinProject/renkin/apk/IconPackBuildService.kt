@@ -111,6 +111,7 @@ class IconPackBuildService internal constructor(
             calendarData.drawables,
             packPackageName = profileManager.packPackageNameFor(profileId),
             packLabel = packLabel,
+            packIconPath = profile?.packIconPath.orEmpty(),
             iconPackCatalog = iconPackCatalog
         )
         val canBeInstalled = builder.canBeInstalled() // Must run before buildAndSign.
