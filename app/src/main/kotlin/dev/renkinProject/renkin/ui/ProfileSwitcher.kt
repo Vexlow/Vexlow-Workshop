@@ -296,8 +296,7 @@ fun ProfileSwitcherTitle() {
             initialPackIconPath = profile.packIconPath,
             onConfirm = { name, description, packLabel, packIconPath ->
                 editing = null
-viewModel.updateProfileDetails(profile.id, name, description, packLabel, packIconPath)
-                
+                viewModel.updateProfileDetails(profile.id, name, description, packLabel, packIconPath)
             },
             onDismiss = { editing = null }
         )
@@ -449,25 +448,25 @@ internal fun ProfileActionsMenu(
 private fun ProfileDetailsDialog(
     title: String,
     confirmLabel: String,
-        onConfirm: (name: String, description: String, packLabel: String, packIconPath: String) -> Unit,
+    onConfirm: (name: String, description: String, packLabel: String, packIconPath: String) -> Unit,
     onDismiss: () -> Unit,
     initialName: String = "",
     initialDescription: String = "",
     initialPackLabel: String = "",
-    initialPackIconPath: String = "",
+    initialPackIconPath: String = ""
 ) {
     var name by rememberSaveable { mutableStateOf(initialName) }
     var description by rememberSaveable { mutableStateOf(initialDescription) }
     var packLabel by rememberSaveable { mutableStateOf(initialPackLabel) }
     var packIconPath by rememberSaveable { mutableStateOf(initialPackIconPath) }
 
-val iconPicker = rememberLauncherForActivityResult(
-    ActivityResultContracts.OpenDocument()
-) { uri ->
-    if (uri != null) {
-        packIconPath = uri.toString()
+    val iconPicker = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri != null) {
+            packIconPath = uri.toString()
+        }
     }
-}
 
     RenkinAlertDialog(
         onDismissRequest = onDismiss,
@@ -475,12 +474,12 @@ val iconPicker = rememberLauncherForActivityResult(
         text = {
             Column {
                 TextButton(
-    onClick = { iconPicker.launch(arrayOf(PACK_ICON_MIME_TYPE)) }
-) {
-    Text(
-        if (packIconPath.isEmpty()) "Choose Pack Icon"
-        else "Change Pack Icon"
-    )
+                    onClick = { iconPicker.launch(arrayOf(PACK_ICON_MIME_TYPE)) }
+                ) {
+                    Text(
+                        if (packIconPath.isEmpty()) "Choose Pack Icon"
+                        else "Change Pack Icon"
+                    )
                 }
                 OutlinedTextField(
                     value = name,
@@ -512,7 +511,9 @@ val iconPicker = rememberLauncherForActivityResult(
         },
         confirmButton = {
             TextButton(
-                onClick = { onConfirm(name.trim(), description.trim(), packLabel.trim()) },
+                onClick = {
+                    onConfirm(name.trim(), description.trim(), packLabel.trim(), packIconPath)
+                },
                 enabled = name.isNotBlank() && packLabel.isNotBlank()
             ) { Text(confirmLabel) }
         },
