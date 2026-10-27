@@ -88,6 +88,7 @@ fun ProfileSwitcherTitle() {
     var pendingCreateName by rememberSaveable { mutableStateOf("") }
     var pendingCreateDescription by rememberSaveable { mutableStateOf("") }
     var pendingCreatePackLabel by rememberSaveable { mutableStateOf("") }
+    var pendingCreatePackIconPath by rememberSaveable { mutableStateOf("") }
 
     // Profile whose share was requested, held while the system file picker is up.
     var pendingShareId by rememberSaveable { mutableStateOf<Long?>(null) }
@@ -266,7 +267,7 @@ fun ProfileSwitcherTitle() {
         ProfileDetailsDialog(
             title = stringResource(R.string.createProfileTitle),
             confirmLabel = stringResource(R.string.createProfileAction),
-            onConfirm = { name, description, packLabel ->
+            onConfirm = { name, description, packLabel, packIconPath ->
                 // The save prompt stacks ON the form instead of replacing it: cancelling the
                 // prompt then returns to the details the user already typed, rather than an
                 // empty dialog they have to fill in again.
@@ -274,10 +275,11 @@ fun ProfileSwitcherTitle() {
                     pendingCreateName = name
                     pendingCreateDescription = description
                     pendingCreatePackLabel = packLabel
+                    pendingCreatePackIconPath = packIconPath
                     pendingCreate = true
                 } else {
                     createOpen = false
-                    viewModel.createProfile(name, description, packLabel)
+                    viewModel.createProfile(name, description, packLabel, packIconPath = packIconPath)
                 }
             },
             onDismiss = { createOpen = false }
@@ -291,9 +293,11 @@ fun ProfileSwitcherTitle() {
             initialName = profile.name,
             initialDescription = profile.description,
             initialPackLabel = profile.packLabel,
-            onConfirm = { name, description, packLabel ->
+            initialPackIconPath = profile.packIconPath,
+            onConfirm = { name, description, packLabel, packIconPath ->
                 editing = null
-                viewModel.updateProfileDetails(profile.id, name, description, packLabel)
+viewModel.updateProfileDetails(profile.id, name, description, packLabel, packIconPath)
+                
             },
             onDismiss = { editing = null }
         )
@@ -315,6 +319,7 @@ fun ProfileSwitcherTitle() {
                             pendingCreateName,
                             pendingCreateDescription,
                             pendingCreatePackLabel,
+                            packIconPath = pendingCreatePackIconPath,
                             saveFirst = true
                         )
                         // The form did its job — close it only once the profile is on its way.
@@ -331,6 +336,7 @@ fun ProfileSwitcherTitle() {
                             pendingCreateName,
                             pendingCreateDescription,
                             pendingCreatePackLabel,
+                            packIconPath = pendingCreatePackIconPath,
                             saveFirst = false
                         )
                         createOpen = false
@@ -448,6 +454,7 @@ private fun ProfileDetailsDialog(
     initialName: String = "",
     initialDescription: String = "",
     initialPackLabel: String = ""
+    onConfirm: (name: String, description: String, packLabel: String, packIconPath: String) -> Unit,
 ) {
     var name by rememberSaveable { mutableStateOf(initialName) }
     var description by rememberSaveable { mutableStateOf(initialDescription) }
