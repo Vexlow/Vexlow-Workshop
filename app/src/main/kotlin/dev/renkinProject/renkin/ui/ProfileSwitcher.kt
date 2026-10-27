@@ -449,17 +449,17 @@ internal fun ProfileActionsMenu(
 private fun ProfileDetailsDialog(
     title: String,
     confirmLabel: String,
-    onConfirm: (name: String, description: String, packLabel: String) -> Unit,
+        onConfirm: (name: String, description: String, packLabel: String, packIconPath: String) -> Unit,
     onDismiss: () -> Unit,
     initialName: String = "",
     initialDescription: String = "",
-    initialPackLabel: String = ""
-    onConfirm: (name: String, description: String, packLabel: String, packIconPath: String) -> Unit,
+    initialPackLabel: String = "",
+    initialPackIconPath: String = "",
 ) {
     var name by rememberSaveable { mutableStateOf(initialName) }
     var description by rememberSaveable { mutableStateOf(initialDescription) }
     var packLabel by rememberSaveable { mutableStateOf(initialPackLabel) }
-    var packIconPath by rememberSaveable { mutableStateOf("") }
+    var packIconPath by rememberSaveable { mutableStateOf(initialPackIconPath) }
 
 val iconPicker = rememberLauncherForActivityResult(
     ActivityResultContracts.OpenDocument()
