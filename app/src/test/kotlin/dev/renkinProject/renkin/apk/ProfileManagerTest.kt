@@ -156,36 +156,48 @@ class ProfileManagerTest {
     }
 
     @Test
-    fun defaultProfileCanChangePackIconWithoutChangingIdentity() = runBlocking {
+    fun defaultProfileDetailsAndPackIconAreEditableAndPersistWithoutChangingId() = runBlocking {
         repo.ensureDefaultProfile()
         val manager = manager()
-        val original = repo.profile(DEFAULT_PROFILE_ID)!!
         val customIcon = "data:image/png;base64,AAAA"
 
         manager.updateProfileDetails(
-            DEFAULT_PROFILE_ID,
-            "Must not rename default",
-            "Must not replace description",
-            "Must not rename built-in pack",
-            customIcon
+            DEFAULT_PROFILE_ID, "My Main Profile", "Personal icons", "My Main Pack", customIcon
         )
 
         val updated = repo.profile(DEFAULT_PROFILE_ID)!!
-        assertEquals(original.name, updated.name)
-        assertEquals(original.description, updated.description)
-        assertEquals(original.packLabel, updated.packLabel)
+        assertEquals(DEFAULT_PROFILE_ID, updated.id)
+        assertEquals("My Main Profile", updated.name)
+        assertEquals("Personal icons", updated.description)
+        assertEquals("My Main Pack", updated.packLabel)
         assertEquals(customIcon, updated.packIconPath)
         assertEquals(true, updated.hasUnbuiltChanges)
 
+        // Re-reading through a separate manager sees the stored values.
+        val persisted = manager().profile(DEFAULT_PROFILE_ID)!!
+        assertEquals("My Main Profile", persisted.name)
+        assertEquals(customIcon, persisted.packIconPath)
+
+        // Resetting to the default icon does not change other profile settings.
         manager.updateProfileDetails(
-            DEFAULT_PROFILE_ID,
-            original.name,
-            original.description,
-            original.packLabel,
-            ""
+            DEFAULT_PROFILE_ID, "My Main Profile", "Personal icons", "My Main Pack", ""
         )
-        assertEquals("", repo.profile(DEFAULT_PROFILE_ID)?.packIconPath)
-        assertEquals(true, repo.profile(DEFAULT_PROFILE_ID)?.hasUnbuiltChanges)
+        val reset = repo.profile(DEFAULT_PROFILE_ID)!!
+        assertEquals("", reset.packIconPath)
+        assertEquals("My Main Profile", reset.name)
+        assertEquals(true, reset.hasUnbuiltChanges)
+    }
+
+    @Test
+    fun defaultProfileCannotBeDeleted() = runBlocking {
+        repo.ensureDefaultProfile()
+        val manager = manager()
+        manager.updateProfileDetails(DEFAULT_PROFILE_ID, "My Main Profile", "", "My Pack")
+        manager.deleteProfile(DEFAULT_PROFILE_ID)
+
+        val retained = repo.profile(DEFAULT_PROFILE_ID)
+        assertNotNull(retained)
+        assertEquals("My Main Profile", retained?.name)
     }
 
     @Test

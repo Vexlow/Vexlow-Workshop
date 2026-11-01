@@ -283,7 +283,6 @@
     <string name="profileDescription">Description (optional)</string>
     <string name="profilePackLabel">Icon pack name</string>
     <string name="editProfile">Edit profile</string>
-    <string name="editDefaultProfileIcon">Edit profile icon</string>
     <string name="requiredField">Required</string>
     <string name="createProfileAction">Create</string>
     <string name="deleteProfile">Delete profile</string>

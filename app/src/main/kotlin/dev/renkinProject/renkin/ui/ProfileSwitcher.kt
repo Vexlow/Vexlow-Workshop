@@ -72,10 +72,9 @@ private const val MAX_PACK_LABEL = 30
 private const val PACK_ICON_MIME_TYPE = "image/*"
 
 /**
- * The top-bar title as a profile switcher: shows the active profile's name (the default profile
- * shows the app name) and opens a dropdown with every profile plus "Create new profile". Each
- * profile is its own icon set + preferences + built pack; the default one can't be deleted
- * or renamed (its identity is the app itself), but its built pack icon is editable.
+ * The top-bar title as a profile switcher: shows the active profile's name and opens a
+ * dropdown with every profile plus "Create new profile". All profiles have editable details
+ * and generated pack icons; the starter profile is permanent so its icons cannot be orphaned.
  */
 @Composable
 fun ProfileSwitcherTitle() {
@@ -151,8 +150,11 @@ fun ProfileSwitcherTitle() {
         ) {
             // Single line + ellipsis: a long profile name must not wrap the whole top bar.
             Text(
-                text = if (activeId == DEFAULT_PROFILE_ID) stringResource(R.string.app_name)
-                    else active?.name ?: stringResource(R.string.app_name),
+                // Keep the original app title for untouched legacy starter profiles; once
+                // renamed, display the user's chosen name just like any other profile.
+                text = active?.name?.takeUnless {
+                    activeId == DEFAULT_PROFILE_ID && it == "Renkin"
+                } ?: stringResource(R.string.app_name),
                 // Expressive-style emphasis: only the weight is raised so the large app bar's
                 // expanded/collapsed size animation keeps driving the rest of the style.
                 fontWeight = FontWeight.SemiBold,
@@ -300,11 +302,9 @@ fun ProfileSwitcherTitle() {
     }
 
     editing?.let { profile ->
-        val isDefaultProfile = profile.id == DEFAULT_PROFILE_ID
         ProfileDetailsDialog(
-            title = stringResource(if (isDefaultProfile) R.string.editDefaultProfileIcon else R.string.editProfile),
+            title = stringResource(R.string.editProfile),
             confirmLabel = stringResource(R.string.saveAction),
-            iconOnly = isDefaultProfile,
             initialName = profile.name,
             initialDescription = profile.description,
             initialPackLabel = profile.packLabel,
@@ -436,7 +436,7 @@ internal fun ProfileActionsMenu(
         onClick = onShare
     )
     DropdownMenuItem(
-        text = { Text(stringResource(if (profile.id == DEFAULT_PROFILE_ID) R.string.editDefaultProfileIcon else R.string.editProfile)) },
+        text = { Text(stringResource(R.string.editProfile)) },
         leadingIcon = {
             Icon(Icons.Filled.Edit, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
         },
@@ -454,9 +454,8 @@ internal fun ProfileActionsMenu(
 }
 
 /**
- * Shared create/edit form for profile details and pack icon. When [iconOnly] is true,
- * the built-in profile can change its generated pack's icon without modifying its protected
- * name, description or pack label. Other profiles can edit all fields normally.
+ * Shared create/edit form for all profiles, including the permanent starter profile.
+ * Names, descriptions, generated-pack labels and custom launcher icons are all editable.
  */
 @Composable
 private fun ProfileDetailsDialog(
@@ -467,8 +466,7 @@ private fun ProfileDetailsDialog(
     initialName: String = "",
     initialDescription: String = "",
     initialPackLabel: String = "",
-    initialPackIconPath: String = "",
-    iconOnly: Boolean = false
+    initialPackIconPath: String = ""
 ) {
     var name by rememberSaveable { mutableStateOf(initialName) }
     var description by rememberSaveable { mutableStateOf(initialDescription) }
@@ -553,34 +551,32 @@ private fun ProfileDetailsDialog(
                 iconError?.let {
                     Text(it, color = MaterialTheme.colorScheme.error)
                 }
-                if (!iconOnly) {
-                    OutlinedTextField(
-                        value = name,
-                        onValueChange = { name = it.take(MAX_PROFILE_NAME) },
-                        label = { Text(stringResource(R.string.profileName) + " *") },
-                        supportingText = if (name.isBlank()) {
-                            { Text(stringResource(R.string.requiredField)) }
-                        } else null,
-                        singleLine = true,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-                    OutlinedTextField(
-                        value = description,
-                        onValueChange = { description = it.take(MAX_PROFILE_DESCRIPTION) },
-                        label = { Text(stringResource(R.string.profileDescription)) },
-                        singleLine = true,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-                    OutlinedTextField(
-                        value = packLabel,
-                        onValueChange = { packLabel = it.take(MAX_PACK_LABEL) },
-                        label = { Text(stringResource(R.string.profilePackLabel) + " *") },
-                        supportingText = if (packLabel.isBlank()) {
-                            { Text(stringResource(R.string.requiredField)) }
-                        } else null,
-                        singleLine = true
-                    )
-                }
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it.take(MAX_PROFILE_NAME) },
+                    label = { Text(stringResource(R.string.profileName) + " *") },
+                    supportingText = if (name.isBlank()) {
+                        { Text(stringResource(R.string.requiredField)) }
+                    } else null,
+                    singleLine = true,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                OutlinedTextField(
+                    value = description,
+                    onValueChange = { description = it.take(MAX_PROFILE_DESCRIPTION) },
+                    label = { Text(stringResource(R.string.profileDescription)) },
+                    singleLine = true,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                OutlinedTextField(
+                    value = packLabel,
+                    onValueChange = { packLabel = it.take(MAX_PACK_LABEL) },
+                    label = { Text(stringResource(R.string.profilePackLabel) + " *") },
+                    supportingText = if (packLabel.isBlank()) {
+                        { Text(stringResource(R.string.requiredField)) }
+                    } else null,
+                    singleLine = true
+                )
             }
         },
         confirmButton = {
