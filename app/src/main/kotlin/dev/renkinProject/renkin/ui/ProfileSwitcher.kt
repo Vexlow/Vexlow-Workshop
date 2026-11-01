@@ -454,10 +454,9 @@ internal fun ProfileActionsMenu(
 }
 
 /**
- * Shared create/edit form: name + optional description + the launcher label of the profile's
- * built pack. Name and pack label are required (the label is what the launcher lists the pack
- * under — an empty one would install an unnamed pack); all fields are length-capped because
- * the name becomes the top-bar title and the label the pack's launcher name.
+ * Shared create/edit form for profile details and pack icon. When [iconOnly] is true,
+ * the built-in profile can change its generated pack's icon without modifying its protected
+ * name, description or pack label. Other profiles can edit all fields normally.
  */
 @Composable
 private fun ProfileDetailsDialog(
@@ -555,32 +554,32 @@ private fun ProfileDetailsDialog(
                     Text(it, color = MaterialTheme.colorScheme.error)
                 }
                 if (!iconOnly) {
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it.take(MAX_PROFILE_NAME) },
-                    label = { Text(stringResource(R.string.profileName) + " *") },
-                    supportingText = if (name.isBlank()) {
-                        { Text(stringResource(R.string.requiredField)) }
-                    } else null,
-                    singleLine = true,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-                OutlinedTextField(
-                    value = description,
-                    onValueChange = { description = it.take(MAX_PROFILE_DESCRIPTION) },
-                    label = { Text(stringResource(R.string.profileDescription)) },
-                    singleLine = true,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-                OutlinedTextField(
-                    value = packLabel,
-                    onValueChange = { packLabel = it.take(MAX_PACK_LABEL) },
-                    label = { Text(stringResource(R.string.profilePackLabel) + " *") },
-                    supportingText = if (packLabel.isBlank()) {
-                        { Text(stringResource(R.string.requiredField)) }
-                    } else null,
-                    singleLine = true
-                )
+                    OutlinedTextField(
+                        value = name,
+                        onValueChange = { name = it.take(MAX_PROFILE_NAME) },
+                        label = { Text(stringResource(R.string.profileName) + " *") },
+                        supportingText = if (name.isBlank()) {
+                            { Text(stringResource(R.string.requiredField)) }
+                        } else null,
+                        singleLine = true,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                    OutlinedTextField(
+                        value = description,
+                        onValueChange = { description = it.take(MAX_PROFILE_DESCRIPTION) },
+                        label = { Text(stringResource(R.string.profileDescription)) },
+                        singleLine = true,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                    OutlinedTextField(
+                        value = packLabel,
+                        onValueChange = { packLabel = it.take(MAX_PACK_LABEL) },
+                        label = { Text(stringResource(R.string.profilePackLabel) + " *") },
+                        supportingText = if (packLabel.isBlank()) {
+                            { Text(stringResource(R.string.requiredField)) }
+                        } else null,
+                        singleLine = true
+                    )
                 }
             }
         },
