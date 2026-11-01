@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <!-- Debug builds are separate Android installations; make the test app obvious. -->
-    <string name="app_name" translatable="false">VIPD PROFILE TEST</string>
-</resources>
