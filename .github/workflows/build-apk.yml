@@ -3,9 +3,6 @@ name: Build Android APK
 
 on:
   workflow_dispatch:
-  # Temporary: build installable APKs for VX launcher-icon testing.
-  push:
-    branches: [feature/vipd-launcher-vx]
 
 jobs:
   build:
