@@ -74,8 +74,8 @@ private const val PACK_ICON_MIME_TYPE = "image/*"
 /**
  * The top-bar title as a profile switcher: shows the active profile's name (the default profile
  * shows the app name) and opens a dropdown with every profile plus "Create new profile". Each
- * profile is its own icon set + preferences + built pack; the default one can't be deleted or
- * edited (its identity is the app itself), every other one gets edit + delete actions.
+ * profile is its own icon set + preferences + built pack; the default one can't be deleted
+ * or renamed (its identity is the app itself), but its built pack icon is editable.
  */
 @Composable
 fun ProfileSwitcherTitle() {
@@ -300,9 +300,11 @@ fun ProfileSwitcherTitle() {
     }
 
     editing?.let { profile ->
+        val isDefaultProfile = profile.id == DEFAULT_PROFILE_ID
         ProfileDetailsDialog(
-            title = stringResource(R.string.editProfile),
+            title = stringResource(if (isDefaultProfile) R.string.editDefaultProfileIcon else R.string.editProfile),
             confirmLabel = stringResource(R.string.saveAction),
+            iconOnly = isDefaultProfile,
             initialName = profile.name,
             initialDescription = profile.description,
             initialPackLabel = profile.packLabel,
@@ -433,14 +435,14 @@ internal fun ProfileActionsMenu(
         enabled = shareEnabled,
         onClick = onShare
     )
+    DropdownMenuItem(
+        text = { Text(stringResource(if (profile.id == DEFAULT_PROFILE_ID) R.string.editDefaultProfileIcon else R.string.editProfile)) },
+        leadingIcon = {
+            Icon(Icons.Filled.Edit, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+        },
+        onClick = onEdit
+    )
     if (profile.id != DEFAULT_PROFILE_ID) {
-        DropdownMenuItem(
-            text = { Text(stringResource(R.string.editProfile)) },
-            leadingIcon = {
-                Icon(Icons.Filled.Edit, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-            },
-            onClick = onEdit
-        )
         DropdownMenuItem(
             text = { Text(stringResource(R.string.deleteProfile), color = MaterialTheme.colorScheme.error) },
             leadingIcon = {
@@ -466,7 +468,8 @@ private fun ProfileDetailsDialog(
     initialName: String = "",
     initialDescription: String = "",
     initialPackLabel: String = "",
-    initialPackIconPath: String = ""
+    initialPackIconPath: String = "",
+    iconOnly: Boolean = false
 ) {
     var name by rememberSaveable { mutableStateOf(initialName) }
     var description by rememberSaveable { mutableStateOf(initialDescription) }
@@ -551,6 +554,7 @@ private fun ProfileDetailsDialog(
                 iconError?.let {
                     Text(it, color = MaterialTheme.colorScheme.error)
                 }
+                if (!iconOnly) {
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it.take(MAX_PROFILE_NAME) },
@@ -577,6 +581,7 @@ private fun ProfileDetailsDialog(
                     } else null,
                     singleLine = true
                 )
+                }
             }
         },
         confirmButton = {
