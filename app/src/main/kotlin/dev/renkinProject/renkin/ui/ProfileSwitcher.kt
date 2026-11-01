@@ -2,11 +2,13 @@ package dev.renkinProject.renkin.ui
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
@@ -37,6 +39,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -48,9 +53,12 @@ import dev.renkinProject.renkin.R
 import dev.renkinProject.renkin.data.DEFAULT_PROFILE_ID
 import dev.renkinProject.renkin.data.HideProfileShareWarningKey
 import dev.renkinProject.renkin.data.Profile
+import dev.renkinProject.renkin.data.ProfilePackIcon
 import dev.renkinProject.renkin.data.getBooleanValue
 import dev.renkinProject.renkin.data.transfer.BackupManager
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 // Input caps: the profile name doubles as the top-bar title and the pack label ends up as the
 // launcher-visible app name of the built pack — unbounded text breaks both layouts.
@@ -88,7 +96,8 @@ fun ProfileSwitcherTitle() {
     var pendingCreateName by rememberSaveable { mutableStateOf("") }
     var pendingCreateDescription by rememberSaveable { mutableStateOf("") }
     var pendingCreatePackLabel by rememberSaveable { mutableStateOf("") }
-    var pendingCreatePackIconPath by rememberSaveable { mutableStateOf("") }
+    // Encoded icon data is too large for Android's saved-instance-state Bundle.
+    var pendingCreatePackIconPath by remember { mutableStateOf("") }
 
     // Profile whose share was requested, held while the system file picker is up.
     var pendingShareId by rememberSaveable { mutableStateOf<Long?>(null) }
@@ -458,13 +467,33 @@ private fun ProfileDetailsDialog(
     var name by rememberSaveable { mutableStateOf(initialName) }
     var description by rememberSaveable { mutableStateOf(initialDescription) }
     var packLabel by rememberSaveable { mutableStateOf(initialPackLabel) }
-    var packIconPath by rememberSaveable { mutableStateOf(initialPackIconPath) }
+    // The icon is stored as a small embedded PNG. Large image strings must not go into
+    // Android's saved-instance-state Bundle (rememberSaveable).
+    var packIconPath by remember { mutableStateOf(initialPackIconPath) }
+    var loadingIcon by remember { mutableStateOf(false) }
+    var iconError by remember { mutableStateOf<String?>(null) }
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val preview = remember(packIconPath) { ProfilePackIcon.decode(packIconPath)?.asImageBitmap() }
 
     val iconPicker = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocument()
     ) { uri ->
         if (uri != null) {
-            packIconPath = uri.toString()
+            loadingIcon = true
+            iconError = null
+            scope.launch {
+                try {
+                    val encoded = withContext(Dispatchers.IO) {
+                        ProfilePackIcon.fromUri(context, uri)
+                    }
+                    packIconPath = encoded
+                } catch (_: Exception) {
+                    iconError = "Could not open that image. Try a PNG, JPEG or WebP image."
+                } finally {
+                    loadingIcon = false
+                }
+            }
         }
     }
 
@@ -474,12 +503,31 @@ private fun ProfileDetailsDialog(
         text = {
             Column {
                 TextButton(
-                    onClick = { iconPicker.launch(arrayOf(PACK_ICON_MIME_TYPE)) }
+                    onClick = { iconPicker.launch(arrayOf(PACK_ICON_MIME_TYPE)) },
+                    enabled = !loadingIcon
                 ) {
-                    Text(
-                        if (packIconPath.isEmpty()) "Choose Pack Icon"
-                        else "Change Pack Icon"
-                    )
+                    Text(when {
+                        loadingIcon -> "Loading image…"
+                        packIconPath.isEmpty() -> "Choose Pack Icon"
+                        else -> "Change Pack Icon"
+                    })
+                }
+                if (packIconPath.isNotEmpty()) {
+                    preview?.let {
+                        Image(
+                            bitmap = it,
+                            contentDescription = "Selected pack icon",
+                            modifier = Modifier.size(72.dp),
+                            contentScale = ContentScale.Fit
+                        )
+                    }
+                    TextButton(
+                        onClick = { packIconPath = ""; iconError = null },
+                        enabled = !loadingIcon
+                    ) { Text("Use Default Pack Icon") }
+                }
+                iconError?.let {
+                    Text(it, color = MaterialTheme.colorScheme.error)
                 }
                 OutlinedTextField(
                     value = name,
@@ -514,7 +562,7 @@ private fun ProfileDetailsDialog(
                 onClick = {
                     onConfirm(name.trim(), description.trim(), packLabel.trim(), packIconPath)
                 },
-                enabled = name.isNotBlank() && packLabel.isNotBlank()
+                enabled = !loadingIcon && name.isNotBlank() && packLabel.isNotBlank()
             ) { Text(confirmLabel) }
         },
         dismissButton = {
