@@ -6,6 +6,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -53,6 +54,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
@@ -84,6 +86,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
+import dev.renkinProject.renkin.ui.theme.VexlowNeon
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -461,8 +464,20 @@ fun MainColumn(iconPacks: List<IconPack>) {
     // No pull-to-refresh here on purpose: its nested-scroll handler interfered with the
     // collapsing top bar (scroll glitches, freezes) — the app list reloads from Settings.
     CompositionLocalProvider(LocalIntroTargets provides introTargets) {
+        // Background gradient changes only VIVD's own chrome, never created icon artwork.
+        val backdrop = Brush.verticalGradient(
+            if (MaterialTheme.colorScheme.background == VexlowNeon.Midnight)
+                listOf(VexlowNeon.Midnight, VexlowNeon.BackgroundDeep)
+            else listOf(
+                MaterialTheme.colorScheme.background,
+                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.32f)
+            )
+        )
         Scaffold(
-            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+            modifier = Modifier
+                .background(backdrop)
+                .nestedScroll(scrollBehavior.nestedScrollConnection),
+            containerColor = Color.Transparent,
             topBar = { TitleBar(scrollBehavior) },
             snackbarHost = { SnackbarHost(snackbarHostState) },
             floatingActionButton = {
@@ -1077,7 +1092,26 @@ fun TitleBar(
             titleContentColor = MaterialTheme.colorScheme.primary,
         ),
         title = {
-            Box(Modifier.introTarget(IntroTarget.PROFILE)) { ProfileSwitcherTitle() }
+            Row(
+                Modifier.introTarget(IntroTarget.PROFILE),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                VexlowBrandMark()
+                Spacer(Modifier.width(9.dp))
+                Column {
+                    Text(
+                        text = stringResource(R.string.vexlowNeonWorkshopLabel),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.secondary,
+                        maxLines = 1
+                    )
+                    CompositionLocalProvider(
+                        LocalTextStyle provides MaterialTheme.typography.titleMedium
+                    ) {
+                        ProfileSwitcherTitle()
+                    }
+                }
+            }
         },
         actions = {
             // Lit while any of the active profile's icons are locked behind a missing pack.

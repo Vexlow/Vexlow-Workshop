@@ -179,6 +179,7 @@ fun SettingsScreen(prefs: DataStore<Preferences>, onDismiss: () -> Unit) {
                             .verticalScroll(rememberScrollState())
                             .padding(horizontal = 16.dp)
                     ) {
+                    VexlowIdentityCard()
                     SettingsSectionHeader(stringResource(R.string.settingsAppearance))
                     ThemeRow(prefs, viewModel::setDarkMode)
 

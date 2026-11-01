@@ -11,6 +11,7 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.lazy.LazyColumn
@@ -249,6 +250,7 @@ fun HeroPackCard(
         onClick = { sheetOpen = true },
         shape = CardShape,
         color = MaterialTheme.colorScheme.primaryContainer,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp, 8.dp)
@@ -270,9 +272,27 @@ fun HeroPackCard(
                 .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 12.dp)
         ) {
             Text(
-                text = stringResource(R.string.vexlowNeonWorkshopLabel),
+                text = stringResource(R.string.vexlowNeonWorkspaceLabel),
                 style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.secondary
+            )
+            Spacer(Modifier.height(7.dp))
+            Text(
+                text = stringResource(R.string.vexlowHeroHeadline),
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+            Text(
+                text = stringResource(R.string.vexlowHeroSubtitle),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.80f),
+                modifier = Modifier.padding(top = 3.dp)
+            )
+            HorizontalDivider(
+                modifier = Modifier.padding(top = 14.dp, bottom = 12.dp),
+                color = MaterialTheme.colorScheme.outlineVariant
             )
             Text(
                 text = stringResource(R.string.heroPackLabel),
