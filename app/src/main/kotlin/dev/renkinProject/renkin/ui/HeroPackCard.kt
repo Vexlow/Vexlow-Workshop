@@ -199,7 +199,7 @@ fun HeroPackCard(
     val packName = preferences.getStringValue(PrimaryIconPackKey)
     val selectedPack = iconPacks.find { it.packageName == packName }
 
-    // Completion progress (moved here from the options card): blue = already built, green =
+    // Completion progress (moved here from the options card): primary tint = already built, green =
     // added since (pending build), red = removed since.
     val stats by remember(viewModel) {
         derivedStateOf {
@@ -690,7 +690,7 @@ internal fun changeBarSegments(
 ).filter { (from, to, _) -> to > from }
 
 /**
- * Segmented completion bar: blue = icons already in the last built pack, green = added
+ * Segmented completion bar: themed primary = icons already in the last built pack, green = added
  * since (pending build), red = removed since. Material 3 has no multi-colour progress
  * bar, so this hand-draws one with the stock indicator's modern traits: rounded capsule
  * ends, the gap before the remainder track, and the stop-indicator dot at the far end.
