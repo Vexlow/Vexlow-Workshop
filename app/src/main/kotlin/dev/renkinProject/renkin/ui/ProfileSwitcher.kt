@@ -8,6 +8,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
@@ -27,6 +30,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -502,10 +506,22 @@ private fun ProfileDetailsDialog(
         title = { Text(title) },
         text = {
             Column {
-                TextButton(
+                Text(
+                    text = "Profile icon",
+                    style = MaterialTheme.typography.titleSmall,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                OutlinedButton(
                     onClick = { iconPicker.launch(arrayOf(PACK_ICON_MIME_TYPE)) },
-                    enabled = !loadingIcon
+                    enabled = !loadingIcon,
+                    modifier = Modifier.fillMaxWidth()
                 ) {
+                    Icon(
+                        imageVector = Icons.Filled.Edit,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(Modifier.width(8.dp))
                     Text(when {
                         loadingIcon -> "Loading image…"
                         packIconPath.isEmpty() -> "Choose Profile Icon"
@@ -517,7 +533,7 @@ private fun ProfileDetailsDialog(
                         Image(
                             bitmap = it,
                             contentDescription = "Selected profile icon",
-                            modifier = Modifier.size(72.dp),
+                            modifier = Modifier.size(72.dp).padding(top = 8.dp),
                             contentScale = ContentScale.Fit
                         )
                     }
@@ -526,6 +542,12 @@ private fun ProfileDetailsDialog(
                         enabled = !loadingIcon
                     ) { Text("Use Default Profile Icon") }
                 }
+                Text(
+                    text = "Used as the installed icon pack's app icon.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
                 iconError?.let {
                     Text(it, color = MaterialTheme.colorScheme.error)
                 }
