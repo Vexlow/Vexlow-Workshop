@@ -72,9 +72,17 @@ class ProfileManager internal constructor(
         val profile = packRepo.profile(id) ?: return
         // Callers that edit only text keep the previous icon; an explicit empty string resets it.
         val selectedPath = packIconPath ?: profile.packIconPath
-        val needsBuild = profile.packLabel != packLabel || profile.packIconPath != selectedPath
+        // The built-in profile keeps its identity. Its generated pack icon is editable.
+        val isDefault = id == DEFAULT_PROFILE_ID
+        val updatedName = if (isDefault) profile.name else name
+        val updatedDescription = if (isDefault) profile.description else description
+        val updatedLabel = if (isDefault) profile.packLabel else packLabel
+        val needsBuild = profile.packLabel != updatedLabel || profile.packIconPath != selectedPath
         packRepo.updateProfile(profile.copy(
-            name = name, description = description, packLabel = packLabel, packIconPath = selectedPath,
+            name = updatedName,
+            description = updatedDescription,
+            packLabel = updatedLabel,
+            packIconPath = selectedPath,
             hasUnbuiltChanges = profile.hasUnbuiltChanges || needsBuild
         ))
     }
