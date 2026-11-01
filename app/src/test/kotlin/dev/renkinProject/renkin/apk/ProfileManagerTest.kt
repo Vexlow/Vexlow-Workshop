@@ -139,6 +139,20 @@ class ProfileManagerTest {
     }
 
     @Test
+    fun profilePackIconPersistsAndEditingChangesItsNextBuild() = runBlocking {
+        val manager = manager()
+        val profileId = manager.createProfile("Custom", "first", "Custom Pack", "data:image/png;base64,AAAA")
+        assertEquals("data:image/png;base64,AAAA", repo.profile(profileId)?.packIconPath)
+
+        manager.updateProfileDetails(profileId, "Renamed", "second", "Custom Pack")
+        assertEquals("data:image/png;base64,AAAA", repo.profile(profileId)?.packIconPath)
+
+        manager.updateProfileDetails(profileId, "Renamed", "second", "Custom Pack", "")
+        assertEquals("", repo.profile(profileId)?.packIconPath)
+        assertEquals(true, repo.profile(profileId)?.hasUnbuiltChanges)
+    }
+
+    @Test
     fun deleteProfileRemovesProfileAndItsIcons() = runBlocking {
         repo.ensureDefaultProfile()
         val profileId = repo.createProfile(Profile(name = "Disposable"))
