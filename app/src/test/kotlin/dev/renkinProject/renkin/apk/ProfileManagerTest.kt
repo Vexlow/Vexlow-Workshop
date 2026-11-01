@@ -161,14 +161,15 @@ class ProfileManagerTest {
 
         manager.updateProfileDetails(
             DEFAULT_PROFILE_ID,
-            original.name,
-            original.description,
-            original.packLabel,
+            "Must not rename default",
+            "Must not replace description",
+            "Must not rename built-in pack",
             customIcon
         )
 
         val updated = repo.profile(DEFAULT_PROFILE_ID)!!
         assertEquals(original.name, updated.name)
+        assertEquals(original.description, updated.description)
         assertEquals(original.packLabel, updated.packLabel)
         assertEquals(customIcon, updated.packIconPath)
         assertEquals(true, updated.hasUnbuiltChanges)
