@@ -153,6 +153,38 @@ class ProfileManagerTest {
     }
 
     @Test
+    fun defaultProfileCanChangePackIconWithoutChangingIdentity() = runBlocking {
+        repo.ensureDefaultProfile()
+        val manager = manager()
+        val original = repo.profile(DEFAULT_PROFILE_ID)!!
+        val customIcon = "data:image/png;base64,AAAA"
+
+        manager.updateProfileDetails(
+            DEFAULT_PROFILE_ID,
+            original.name,
+            original.description,
+            original.packLabel,
+            customIcon
+        )
+
+        val updated = repo.profile(DEFAULT_PROFILE_ID)!!
+        assertEquals(original.name, updated.name)
+        assertEquals(original.packLabel, updated.packLabel)
+        assertEquals(customIcon, updated.packIconPath)
+        assertEquals(true, updated.hasUnbuiltChanges)
+
+        manager.updateProfileDetails(
+            DEFAULT_PROFILE_ID,
+            original.name,
+            original.description,
+            original.packLabel,
+            ""
+        )
+        assertEquals("", repo.profile(DEFAULT_PROFILE_ID)?.packIconPath)
+        assertEquals(true, repo.profile(DEFAULT_PROFILE_ID)?.hasUnbuiltChanges)
+    }
+
+    @Test
     fun deleteProfileRemovesProfileAndItsIcons() = runBlocking {
         repo.ensureDefaultProfile()
         val profileId = repo.createProfile(Profile(name = "Disposable"))
