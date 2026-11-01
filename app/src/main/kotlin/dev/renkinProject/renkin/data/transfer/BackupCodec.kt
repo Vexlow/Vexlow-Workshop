@@ -136,6 +136,8 @@ object BackupCodec {
                 .put("name", bp.profile.name)
                 .put("description", bp.profile.description)
                 .put("packLabel", bp.profile.packLabel)
+                // Embedded icon data travels with exported backups and shared profiles.
+                .put("packIconPath", bp.profile.packIconPath)
                 .put("prefsSnapshot", bp.profile.prefsSnapshot)
                 .put("hasUnbuiltChanges", bp.profile.hasUnbuiltChanges)
                 .put("hideMissingPackWarning", bp.profile.hideMissingPackWarning)
@@ -286,6 +288,7 @@ object BackupCodec {
                 name = p.getString("name"),
                 description = p.optString("description"),
                 packLabel = p.optString("packLabel"),
+                packIconPath = p.optString("packIconPath"),
                 prefsSnapshot = p.optString("prefsSnapshot"),
                 hasUnbuiltChanges = p.optBoolean("hasUnbuiltChanges"),
                 hideMissingPackWarning = p.optBoolean("hideMissingPackWarning")
