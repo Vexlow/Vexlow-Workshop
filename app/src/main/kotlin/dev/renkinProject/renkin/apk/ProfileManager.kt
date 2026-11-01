@@ -61,16 +61,20 @@ class ProfileManager internal constructor(
         else "${IconPackBuilder.PACKAGE_NAME}.p$profileId"
 
     /** Creates a profile and returns its id. */
-    suspend fun createProfile(name: String, description: String, packLabel: String): Long =
-        packRepo.createProfile(Profile(name = name, description = description, packLabel = packLabel))
+    suspend fun createProfile(name: String, description: String, packLabel: String, packIconPath: String = ""): Long =
+        packRepo.createProfile(Profile(name = name, description = description, packLabel = packLabel, packIconPath = packIconPath))
 
     /**
      * Updates [id]'s user-facing details. The pack label only takes effect on the next build
      * (it's the launcher-visible label baked into the pack APK's manifest).
      */
-    suspend fun updateProfileDetails(id: Long, name: String, description: String, packLabel: String) {
+    suspend fun updateProfileDetails(id: Long, name: String, description: String, packLabel: String, packIconPath: String = "") {
         val profile = packRepo.profile(id) ?: return
-        packRepo.updateProfile(profile.copy(name = name, description = description, packLabel = packLabel))
+        val needsBuild = profile.packLabel != packLabel || profile.packIconPath != packIconPath
+        packRepo.updateProfile(profile.copy(
+            name = name, description = description, packLabel = packLabel, packIconPath = packIconPath,
+            hasUnbuiltChanges = profile.hasUnbuiltChanges || needsBuild
+        ))
     }
 
     /**
