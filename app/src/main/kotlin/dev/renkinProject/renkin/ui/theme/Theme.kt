@@ -81,8 +81,8 @@ private val DarkColorScheme = darkColorScheme(
 @Composable
 fun RenkinTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Keep VIPD's VX green theme consistent regardless of the phone's wallpaper.
-    // Dynamic colour remains opt-in for future settings, not the default.
+    // Vexlow Neon controls app chrome. The existing light/dark preference remains respected.
+    // Wallpaper-derived dynamic colors remain opt-in and must not affect exported artwork.
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
