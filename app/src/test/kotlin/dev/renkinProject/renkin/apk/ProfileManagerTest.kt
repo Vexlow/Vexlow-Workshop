@@ -128,7 +128,10 @@ class ProfileManagerTest {
 
     @Test
     fun updateProfileDetailsPersistsEveryEditableField() = runBlocking {
+        // Production always creates the reserved default row before user profiles.
+        repo.ensureDefaultProfile()
         val profileId = repo.createProfile(Profile(name = "Old", packLabel = "Old Pack"))
+        org.junit.Assert.assertNotEquals(DEFAULT_PROFILE_ID, profileId)
 
         manager().updateProfileDetails(profileId, "New", "Description", "New Pack")
 
