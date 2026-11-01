@@ -1,0 +1,54 @@
+{
+  "schemaVersion": "1.0.0",
+  "name": "Vexlow Neon",
+  "updated": "2026-11-01",
+  "sourceOfTruth": "Vexlow/Vexlow-Studio/design/vexlow-neon.tokens.json",
+  "colors": {
+    "midnight": "#0B1220",
+    "backgroundDeep": "#080F1C",
+    "surface": "#182436",
+    "surfaceRaised": "#233249",
+    "outline": "#35445D",
+    "primary": "#58ECA8",
+    "primaryLight": "#8DF6C2",
+    "violet": "#AD91F5",
+    "coral": "#F38F8D",
+    "text": "#F5F8FF",
+    "textSecondary": "#B8C4D6",
+    "textMuted": "#92A3B9",
+    "onPrimary": "#081B15",
+    "heroStart": "#24314F",
+    "heroEnd": "#172C33",
+    "success": "#58ECA8",
+    "warning": "#F38F8D"
+  },
+  "geometry": {
+    "screenPaddingDp": 20,
+    "buttonHeightDp": 54,
+    "minimumTapTargetDp": 48,
+    "cardRadiusDp": 22,
+    "buttonRadiusDp": 16,
+    "iconRadiusDp": 14,
+    "smallRadiusDp": 10,
+    "sectionGapDp": 24
+  },
+  "typography": {
+    "font": "Android system sans-serif",
+    "headlineSp": 30,
+    "bodySp": 15,
+    "buttonSp": 15,
+    "labelSp": 12
+  },
+  "guidance": [
+    "Art is the hero, never overlay effects on imported images by default.",
+    "Neon accents are intentional highlights, not all-over glow.",
+    "One clear primary action per section.",
+    "Accessible colors, text scale and touch targets.",
+    "Launcher's store CTA only opens an existing verified store listing."
+  ],
+  "products": {
+    "studio": "Creative wallpaper workshop",
+    "vivd": "Icon and theme workshop",
+    "launcher": "Standalone Android launcher; separate app-store listing"
+  }
+}

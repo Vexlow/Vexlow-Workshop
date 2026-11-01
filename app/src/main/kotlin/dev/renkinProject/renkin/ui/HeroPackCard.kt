@@ -105,6 +105,7 @@ import dev.renkinProject.renkin.ui.theme.GoldBase
 import dev.renkinProject.renkin.ui.theme.RemovedRed
 import dev.renkinProject.renkin.ui.theme.GoldShimmer
 import dev.renkinProject.renkin.ui.theme.CardShape
+import dev.renkinProject.renkin.ui.theme.VexlowNeon
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -254,7 +255,25 @@ fun HeroPackCard(
     ) {
         // Less room under the last line than above it: the trailing element is a compact chip or
         // a label, and a full 16.dp below it left the card looking bottom-heavy.
-        Column(Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 10.dp)) {
+        Column(
+            Modifier
+                .background(
+                    Brush.linearGradient(
+                        listOf(
+                            MaterialTheme.colorScheme.primaryContainer,
+                            if (MaterialTheme.colorScheme.background == VexlowNeon.Midnight)
+                                VexlowNeon.HeroEnd
+                            else MaterialTheme.colorScheme.secondaryContainer
+                        )
+                    )
+                )
+                .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 12.dp)
+        ) {
+            Text(
+                text = stringResource(R.string.vexlowNeonWorkshopLabel),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.secondary
+            )
             Text(
                 text = stringResource(R.string.heroPackLabel),
                 style = MaterialTheme.typography.labelMedium,
