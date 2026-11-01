@@ -15,6 +15,7 @@ import dev.renkinProject.renkin.R
 import dev.renkinProject.renkin.constants.SuppressDeprecation
 import dev.renkinProject.renkin.constants.SuppressSameParameterValue
 import dev.renkinProject.renkin.data.InstalledApplication
+import dev.renkinProject.renkin.data.ProfilePackIcon
 import dev.renkinProject.renkin.drawable.ImageVectorDrawable
 import dev.renkinProject.renkin.drawable.InsetIconDrawable
 import dev.renkinProject.renkin.drawable.toSafeBitmapOrNull
@@ -699,7 +700,57 @@ class IconPackBuilder(
     }
 
     private fun insertIconPackAppIcons(apkModule: ApkModule, packageBlock: PackageBlock, manifest: AndroidManifestBlock) {
-    
+        val selected = ProfilePackIcon.decode(packIconPath)
+        if (selected == null) {
+            insertDefaultLauncherIcons(apkModule, packageBlock)
+        } else {
+            try {
+                // Older launchers look for density-specific launcher bitmaps.
+                for ((qualifier, pixels) in listOf(
+                    "mdpi" to 48, "hdpi" to 72, "xhdpi" to 96,
+                    "xxhdpi" to 144, "xxxhdpi" to 192
+                )) {
+                    val icon = Bitmap.createScaledBitmap(selected, pixels, pixels, true)
+                    try {
+                        createBitmapResource(apkModule, packageBlock, icon, "ic_launcher", qualifier, "mipmap")
+                        createBitmapResource(apkModule, packageBlock, icon, "ic_launcher_round", qualifier, "mipmap")
+                    } finally {
+                        if (icon !== selected) icon.recycle()
+                    }
+                }
+                // On Android 8+, use the selected artwork as the adaptive foreground.
+                createBitmapResource(apkModule, packageBlock, selected, "ic_launcher_foreground")
+                val background = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888).apply {
+                    eraseColor(android.graphics.Color.WHITE)
+                }
+                try {
+                    createBitmapResource(apkModule, packageBlock, background, "ic_launcher_background")
+                } finally {
+                    background.recycle()
+                }
+            } finally {
+                selected.recycle()
+            }
+        }
+
+        val launcher = AdaptiveIconXml()
+        launcher.foreground("ic_launcher")
+        launcher.background("@drawable/ic_launcher_background")
+        if (selected == null) {
+            // The stock monochrome glyph would not represent a custom icon.
+            launcher.monochrome("@drawable/ic_launcher_monochrome")
+        }
+
+        createXmlDrawableResource(apkModule, packageBlock, launcher, "ic_launcher", "anydpi-v26", "mipmap")
+        createXmlDrawableResource(apkModule, packageBlock, launcher, "ic_launcher_round", "anydpi-v26", "mipmap")
+
+        val appIcon = ValueCoder.encodeReference(packageBlock, "@mipmap/ic_launcher")
+        val appIconRound = ValueCoder.encodeReference(packageBlock, "@mipmap/ic_launcher_round")
+        manifest.iconResourceId = appIcon.value
+        manifest.roundIconResourceId = appIconRound.value
+    }
+
+    private fun insertDefaultLauncherIcons(apkModule: ApkModule, packageBlock: PackageBlock) {
         createBitmapResource(apkModule, packageBlock, R.drawable.mdpi_ic_launcher, "ic_launcher", "mdpi", "mipmap")
         createBitmapResource(apkModule, packageBlock, R.drawable.hdpi_ic_launcher, "ic_launcher", "hdpi", "mipmap")
         createBitmapResource(apkModule, packageBlock, R.drawable.xhdpi_ic_launcher, "ic_launcher", "xhdpi", "mipmap")
@@ -718,19 +769,6 @@ class IconPackBuilder(
         createBitmapResource(apkModule, packageBlock, R.drawable.renkinpack_ic_launcher_background, "ic_launcher_background")
         createBitmapResource(apkModule, packageBlock, R.drawable.renkinpack_ic_launcher_monochrome, "ic_launcher_monochrome")
 
-        val launcher = AdaptiveIconXml()
-        launcher.foreground("ic_launcher")
-        launcher.background("@drawable/ic_launcher_background")
-        launcher.monochrome("@drawable/ic_launcher_monochrome")
-
-        createXmlDrawableResource(apkModule, packageBlock, launcher, "ic_launcher", "anydpi-v26", "mipmap")
-        createXmlDrawableResource(apkModule, packageBlock, launcher, "ic_launcher_round", "anydpi-v26", "mipmap")
-
-        val appIcon = ValueCoder.encodeReference(packageBlock, "@mipmap/ic_launcher")
-        val appIconRound = ValueCoder.encodeReference(packageBlock, "@mipmap/ic_launcher_round")
-
-        manifest.iconResourceId = appIcon.value
-        manifest.roundIconResourceId = appIconRound.value
     }
 
     private fun getInstalledVersion(): Version? {

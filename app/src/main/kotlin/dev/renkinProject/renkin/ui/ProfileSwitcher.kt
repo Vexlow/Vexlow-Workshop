@@ -2,11 +2,16 @@ package dev.renkinProject.renkin.ui
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
@@ -25,6 +30,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -37,6 +43,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -48,9 +57,12 @@ import dev.renkinProject.renkin.R
 import dev.renkinProject.renkin.data.DEFAULT_PROFILE_ID
 import dev.renkinProject.renkin.data.HideProfileShareWarningKey
 import dev.renkinProject.renkin.data.Profile
+import dev.renkinProject.renkin.data.ProfilePackIcon
 import dev.renkinProject.renkin.data.getBooleanValue
 import dev.renkinProject.renkin.data.transfer.BackupManager
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 // Input caps: the profile name doubles as the top-bar title and the pack label ends up as the
 // launcher-visible app name of the built pack — unbounded text breaks both layouts.
@@ -60,10 +72,9 @@ private const val MAX_PACK_LABEL = 30
 private const val PACK_ICON_MIME_TYPE = "image/*"
 
 /**
- * The top-bar title as a profile switcher: shows the active profile's name (the default profile
- * shows the app name) and opens a dropdown with every profile plus "Create new profile". Each
- * profile is its own icon set + preferences + built pack; the default one can't be deleted or
- * edited (its identity is the app itself), every other one gets edit + delete actions.
+ * The top-bar title as a profile switcher: shows the active profile's name and opens a
+ * dropdown with every profile plus "Create new profile". All profiles have editable details
+ * and generated pack icons; the starter profile is permanent so its icons cannot be orphaned.
  */
 @Composable
 fun ProfileSwitcherTitle() {
@@ -88,7 +99,8 @@ fun ProfileSwitcherTitle() {
     var pendingCreateName by rememberSaveable { mutableStateOf("") }
     var pendingCreateDescription by rememberSaveable { mutableStateOf("") }
     var pendingCreatePackLabel by rememberSaveable { mutableStateOf("") }
-    var pendingCreatePackIconPath by rememberSaveable { mutableStateOf("") }
+    // Encoded icon data is too large for Android's saved-instance-state Bundle.
+    var pendingCreatePackIconPath by remember { mutableStateOf("") }
 
     // Profile whose share was requested, held while the system file picker is up.
     var pendingShareId by rememberSaveable { mutableStateOf<Long?>(null) }
@@ -138,8 +150,11 @@ fun ProfileSwitcherTitle() {
         ) {
             // Single line + ellipsis: a long profile name must not wrap the whole top bar.
             Text(
-                text = if (activeId == DEFAULT_PROFILE_ID) stringResource(R.string.app_name)
-                    else active?.name ?: stringResource(R.string.app_name),
+                // Keep the original app title for untouched legacy starter profiles; once
+                // renamed, display the user's chosen name just like any other profile.
+                text = active?.name?.takeUnless {
+                    activeId == DEFAULT_PROFILE_ID && it == "Renkin"
+                } ?: stringResource(R.string.app_name),
                 // Expressive-style emphasis: only the weight is raised so the large app bar's
                 // expanded/collapsed size animation keeps driving the rest of the style.
                 fontWeight = FontWeight.SemiBold,
@@ -420,14 +435,14 @@ internal fun ProfileActionsMenu(
         enabled = shareEnabled,
         onClick = onShare
     )
+    DropdownMenuItem(
+        text = { Text(stringResource(R.string.editProfile)) },
+        leadingIcon = {
+            Icon(Icons.Filled.Edit, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+        },
+        onClick = onEdit
+    )
     if (profile.id != DEFAULT_PROFILE_ID) {
-        DropdownMenuItem(
-            text = { Text(stringResource(R.string.editProfile)) },
-            leadingIcon = {
-                Icon(Icons.Filled.Edit, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-            },
-            onClick = onEdit
-        )
         DropdownMenuItem(
             text = { Text(stringResource(R.string.deleteProfile), color = MaterialTheme.colorScheme.error) },
             leadingIcon = {
@@ -439,10 +454,8 @@ internal fun ProfileActionsMenu(
 }
 
 /**
- * Shared create/edit form: name + optional description + the launcher label of the profile's
- * built pack. Name and pack label are required (the label is what the launcher lists the pack
- * under — an empty one would install an unnamed pack); all fields are length-capped because
- * the name becomes the top-bar title and the label the pack's launcher name.
+ * Shared create/edit form for all profiles, including the permanent starter profile.
+ * Names, descriptions, generated-pack labels and custom launcher icons are all editable.
  */
 @Composable
 private fun ProfileDetailsDialog(
@@ -458,13 +471,33 @@ private fun ProfileDetailsDialog(
     var name by rememberSaveable { mutableStateOf(initialName) }
     var description by rememberSaveable { mutableStateOf(initialDescription) }
     var packLabel by rememberSaveable { mutableStateOf(initialPackLabel) }
-    var packIconPath by rememberSaveable { mutableStateOf(initialPackIconPath) }
+    // The icon is stored as a small embedded PNG. Large image strings must not go into
+    // Android's saved-instance-state Bundle (rememberSaveable).
+    var packIconPath by remember { mutableStateOf(initialPackIconPath) }
+    var loadingIcon by remember { mutableStateOf(false) }
+    var iconError by remember { mutableStateOf<String?>(null) }
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val preview = remember(packIconPath) { ProfilePackIcon.decode(packIconPath)?.asImageBitmap() }
 
     val iconPicker = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocument()
     ) { uri ->
         if (uri != null) {
-            packIconPath = uri.toString()
+            loadingIcon = true
+            iconError = null
+            scope.launch {
+                try {
+                    val encoded = withContext(Dispatchers.IO) {
+                        ProfilePackIcon.fromUri(context, uri)
+                    }
+                    packIconPath = encoded
+                } catch (_: Exception) {
+                    iconError = "Could not open that image. Try a PNG, JPEG or WebP image."
+                } finally {
+                    loadingIcon = false
+                }
+            }
         }
     }
 
@@ -473,13 +506,50 @@ private fun ProfileDetailsDialog(
         title = { Text(title) },
         text = {
             Column {
-                TextButton(
-                    onClick = { iconPicker.launch(arrayOf(PACK_ICON_MIME_TYPE)) }
+                Text(
+                    text = "Profile icon",
+                    style = MaterialTheme.typography.titleSmall,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                OutlinedButton(
+                    onClick = { iconPicker.launch(arrayOf(PACK_ICON_MIME_TYPE)) },
+                    enabled = !loadingIcon,
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(
-                        if (packIconPath.isEmpty()) "Choose Pack Icon"
-                        else "Change Pack Icon"
+                    Icon(
+                        imageVector = Icons.Filled.Edit,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
                     )
+                    Spacer(Modifier.width(8.dp))
+                    Text(when {
+                        loadingIcon -> "Loading image…"
+                        packIconPath.isEmpty() -> "Choose Profile Icon"
+                        else -> "Change Profile Icon"
+                    })
+                }
+                if (packIconPath.isNotEmpty()) {
+                    preview?.let {
+                        Image(
+                            bitmap = it,
+                            contentDescription = "Selected profile icon",
+                            modifier = Modifier.size(72.dp).padding(top = 8.dp),
+                            contentScale = ContentScale.Fit
+                        )
+                    }
+                    TextButton(
+                        onClick = { packIconPath = ""; iconError = null },
+                        enabled = !loadingIcon
+                    ) { Text("Use Default Profile Icon") }
+                }
+                Text(
+                    text = "Used as the installed icon pack's app icon.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                iconError?.let {
+                    Text(it, color = MaterialTheme.colorScheme.error)
                 }
                 OutlinedTextField(
                     value = name,
@@ -514,7 +584,7 @@ private fun ProfileDetailsDialog(
                 onClick = {
                     onConfirm(name.trim(), description.trim(), packLabel.trim(), packIconPath)
                 },
-                enabled = name.isNotBlank() && packLabel.isNotBlank()
+                enabled = !loadingIcon && name.isNotBlank() && packLabel.isNotBlank()
             ) { Text(confirmLabel) }
         },
         dismissButton = {

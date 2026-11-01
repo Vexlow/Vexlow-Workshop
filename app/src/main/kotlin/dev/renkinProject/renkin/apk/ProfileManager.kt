@@ -61,16 +61,27 @@ class ProfileManager internal constructor(
         else "${IconPackBuilder.PACKAGE_NAME}.p$profileId"
 
     /** Creates a profile and returns its id. */
-    suspend fun createProfile(name: String, description: String, packLabel: String): Long =
-        packRepo.createProfile(Profile(name = name, description = description, packLabel = packLabel))
+    suspend fun createProfile(name: String, description: String, packLabel: String, packIconPath: String = ""): Long =
+        packRepo.createProfile(Profile(name = name, description = description, packLabel = packLabel, packIconPath = packIconPath))
 
     /**
      * Updates [id]'s user-facing details. The pack label only takes effect on the next build
      * (it's the launcher-visible label baked into the pack APK's manifest).
      */
-    suspend fun updateProfileDetails(id: Long, name: String, description: String, packLabel: String) {
+    suspend fun updateProfileDetails(id: Long, name: String, description: String, packLabel: String, packIconPath: String? = null) {
         val profile = packRepo.profile(id) ?: return
-        packRepo.updateProfile(profile.copy(name = name, description = description, packLabel = packLabel))
+        // Callers that edit only text keep the previous icon; an explicit empty string resets it.
+        val selectedPath = packIconPath ?: profile.packIconPath
+        // Even the permanent starter profile has editable details. Its stable ID, not
+        // its display name, is what identifies the primary generated pack.
+        val needsBuild = profile.packLabel != packLabel || profile.packIconPath != selectedPath
+        packRepo.updateProfile(profile.copy(
+            name = name,
+            description = description,
+            packLabel = packLabel,
+            packIconPath = selectedPath,
+            hasUnbuiltChanges = profile.hasUnbuiltChanges || needsBuild
+        ))
     }
 
     /**
@@ -78,6 +89,9 @@ class ProfileManager internal constructor(
      * when [id] is active — this only removes persistent state.
      */
     suspend fun deleteProfile(id: Long) {
+        // Defense in depth: never delete the reserved starter profile even if called
+        // outside the UI or ApplicationProvider.
+        if (id == DEFAULT_PROFILE_ID) return
         packRepo.deleteProfile(id)
         // Drop the profile's watch rules too, or the periodic worker keeps checking them and
         // fires notifications that deep-link into a profile that no longer exists.

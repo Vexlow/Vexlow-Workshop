@@ -988,11 +988,11 @@ class ApplicationProvider internal constructor(
     suspend fun activePackPackageName(): String = profileManager.packPackageNameFor(activeProfileId)
 
     /** Creates a profile and returns its id. */
-    suspend fun createProfile(name: String, description: String, packLabel: String): Long =
-        profileManager.createProfile(name, description, packLabel)
+    suspend fun createProfile(name: String, description: String, packLabel: String, packIconPath: String = ""): Long =
+        profileManager.createProfile(name, description, packLabel, packIconPath)
 
-    suspend fun updateProfileDetails(id: Long, name: String, description: String, packLabel: String) =
-        profileManager.updateProfileDetails(id, name, description, packLabel)
+    suspend fun updateProfileDetails(id: Long, name: String, description: String, packLabel: String, packIconPath: String? = null) =
+        profileManager.updateProfileDetails(id, name, description, packLabel, packIconPath)
 
     /** Deletes [id] (never the default) and its icons; switches to the default first if active. */
     suspend fun deleteProfile(id: Long) = withContext(Dispatchers.Default) {

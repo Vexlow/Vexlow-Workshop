@@ -115,6 +115,28 @@ class BackupCodecTest {
     }
 
     @Test
+    fun roundTrip_preservesPortableProfilePackIcon() {
+        val icon = "data:image/png;base64,AQIDBAUGBwg="
+        val original = sampleData().let { source ->
+            source.copy(profiles = source.profiles.mapIndexed { index, item ->
+                if (index == 1) item.copy(profile = item.profile.copy(packIconPath = icon)) else item
+            })
+        }
+
+        val restored = BackupCodec.decode(BackupCodec.encode(original))
+        assertEquals(icon, restored.profiles[1].profile.packIconPath)
+    }
+
+    @Test
+    fun decode_olderProfilesWithoutIconFieldUseDefault() {
+        val root = JSONObject(BackupCodec.encode(sampleData()))
+        root.getJSONArray("profiles").getJSONObject(0).remove("packIconPath")
+
+        val restored = BackupCodec.decode(root.toString())
+        assertEquals("", restored.profiles.first().profile.packIconPath)
+    }
+
+    @Test
     fun decode_longsSurviveIntRange() {
         val decoded = BackupCodec.decode(BackupCodec.encode(sampleData()))
 

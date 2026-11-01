@@ -1140,16 +1140,16 @@ class MainViewModel @Inject constructor(
     }
 
     /** Creates a profile and switches straight to it, optionally saving the current one first. */
-    fun createProfile(name: String, description: String, packLabel: String, saveFirst: Boolean = false) {
+    fun createProfile(name: String, description: String, packLabel: String, saveFirst: Boolean = false, packIconPath: String = "") {
         viewModelScope.launch {
-            performSwitch(appProvider.createProfile(name, description, packLabel), saveFirst)
+            performSwitch(appProvider.createProfile(name, description, packLabel, packIconPath), saveFirst)
         }
     }
 
     /** Updates a profile's user-facing details (name, description, built-pack label). */
-    fun updateProfileDetails(id: Long, name: String, description: String, packLabel: String) {
+    fun updateProfileDetails(id: Long, name: String, description: String, packLabel: String, packIconPath: String? = null) {
         viewModelScope.launch {
-            appProvider.updateProfileDetails(id, name, description, packLabel)
+            appProvider.updateProfileDetails(id, name, description, packLabel, packIconPath)
             _toastEvents.trySend(R.string.profileUpdated)
         }
     }
