@@ -182,6 +182,10 @@ fun SettingsScreen(prefs: DataStore<Preferences>, onDismiss: () -> Unit) {
                     SettingsSectionHeader(stringResource(R.string.settingsAppearance))
                     ThemeRow(prefs, viewModel::setDarkMode)
 
+                    // A companion product, not an internal VIVD editor or APK installer.
+                    SettingsSectionHeader(stringResource(R.string.vexlowFamilySection))
+                    VexlowLauncherCompanion()
+
                     SettingsSectionHeader(stringResource(R.string.settingsIconPacks))
                     SettingsRow(
                         Icons.Filled.Sync,

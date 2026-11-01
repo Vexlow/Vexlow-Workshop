@@ -2,6 +2,9 @@
 name: Build Android APK
 
 on:
+  push:
+    branches:
+      - feature/vexlow-neon-ui
   workflow_dispatch:
 
 jobs:

@@ -1,6 +1,12 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name" translatable="false">VIVD</string>
     <string name="vexlowNeonWorkshopLabel" translatable="false">✦  VIVD / VEXLOW NEON</string>
+    <string name="vexlowFamilySection">Vexlow family</string>
+    <string name="vexlowLauncherLabel" translatable="false">Vexlow Launcher</string>
+    <string name="vexlowLauncherComingSoon">Coming soon. The launcher will have its own app-store listing.</string>
+    <string name="vexlowLauncherStoreAction">View Vexlow Launcher on Google Play</string>
+    <!-- Set only after verifying the official published listing; no guessed package names. -->
+    <string name="vexlowLauncherPlayUrl" translatable="false"></string>
 
     <string name="iconColor">Icon color</string>
     <string name="vector">Vector (BETA)</string>
