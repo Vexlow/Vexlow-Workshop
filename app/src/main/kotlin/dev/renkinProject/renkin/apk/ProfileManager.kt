@@ -68,11 +68,13 @@ class ProfileManager internal constructor(
      * Updates [id]'s user-facing details. The pack label only takes effect on the next build
      * (it's the launcher-visible label baked into the pack APK's manifest).
      */
-    suspend fun updateProfileDetails(id: Long, name: String, description: String, packLabel: String, packIconPath: String = "") {
+    suspend fun updateProfileDetails(id: Long, name: String, description: String, packLabel: String, packIconPath: String? = null) {
         val profile = packRepo.profile(id) ?: return
-        val needsBuild = profile.packLabel != packLabel || profile.packIconPath != packIconPath
+        // Callers that edit only text keep the previous icon; an explicit empty string resets it.
+        val selectedPath = packIconPath ?: profile.packIconPath
+        val needsBuild = profile.packLabel != packLabel || profile.packIconPath != selectedPath
         packRepo.updateProfile(profile.copy(
-            name = name, description = description, packLabel = packLabel, packIconPath = packIconPath,
+            name = name, description = description, packLabel = packLabel, packIconPath = selectedPath,
             hasUnbuiltChanges = profile.hasUnbuiltChanges || needsBuild
         ))
     }
