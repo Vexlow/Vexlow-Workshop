@@ -3,6 +3,9 @@ name: Build Android APK
 
 on:
   workflow_dispatch:
+  # Temporary test branch: make an installable APK available after each fix.
+  push:
+    branches: [feature/profile-image-selector]
 
 jobs:
   build:
