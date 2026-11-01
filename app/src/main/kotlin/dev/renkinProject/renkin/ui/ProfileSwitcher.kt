@@ -508,15 +508,15 @@ private fun ProfileDetailsDialog(
                 ) {
                     Text(when {
                         loadingIcon -> "Loading image…"
-                        packIconPath.isEmpty() -> "Choose Pack Icon"
-                        else -> "Change Pack Icon"
+                        packIconPath.isEmpty() -> "Choose Profile Icon"
+                        else -> "Change Profile Icon"
                     })
                 }
                 if (packIconPath.isNotEmpty()) {
                     preview?.let {
                         Image(
                             bitmap = it,
-                            contentDescription = "Selected pack icon",
+                            contentDescription = "Selected profile icon",
                             modifier = Modifier.size(72.dp),
                             contentScale = ContentScale.Fit
                         )
@@ -524,7 +524,7 @@ private fun ProfileDetailsDialog(
                     TextButton(
                         onClick = { packIconPath = ""; iconError = null },
                         enabled = !loadingIcon
-                    ) { Text("Use Default Pack Icon") }
+                    ) { Text("Use Default Profile Icon") }
                 }
                 iconError?.let {
                     Text(it, color = MaterialTheme.colorScheme.error)
