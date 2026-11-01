@@ -81,8 +81,9 @@ private val DarkColorScheme = darkColorScheme(
 @Composable
 fun RenkinTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
+    // Keep VIPD's VX green theme consistent regardless of the phone's wallpaper.
+    // Dynamic colour remains opt-in for future settings, not the default.
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
