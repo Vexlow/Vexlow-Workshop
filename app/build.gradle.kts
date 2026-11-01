@@ -38,7 +38,9 @@ android {
         variant.outputs
             .map { it as com.android.build.gradle.internal.api.BaseVariantOutputImpl }
             .forEach { output ->
-                val outputFileName = "Renkin-v${variant.versionName}.apk"
+                val outputFileName = if (variant.buildType.name == "debug")
+                    "VIPD-Profile-Test-v${variant.versionName}.apk"
+                else "Renkin-v${variant.versionName}.apk"
                 output.outputFileName = outputFileName
             }
     }
@@ -57,6 +59,7 @@ android {
     buildTypes {
         debug {
             applicationIdSuffix = ".dev"
+            versionNameSuffix = "-profile-test"
         }
         release {
             isMinifyEnabled = true
